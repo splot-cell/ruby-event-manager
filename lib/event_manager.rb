@@ -1,6 +1,7 @@
 require "csv"
 require "google/apis/civicinfo_v2"
 require "erb"
+require "time"
 
 SAMPLE_FILE_PATH = "event_attendees.csv"
 TEMPLATE_LETTER_PATH = "form_letter.erb"
@@ -47,6 +48,10 @@ def clean_phone_number(phone_number)
   end
 end
 
+def clean_reg_time(reg_time)
+  Time.strptime(reg_time, "%m/%d/%y %H:%M")
+end
+
 puts "Event Manager Initialized."
 
 # Open attendees file and initalize letter template
@@ -58,11 +63,18 @@ attendee_data = CSV.open(
 template_letter = File.read(TEMPLATE_LETTER_PATH)
 erb_template = ERB.new template_letter
 
+hour_registered = Hash.new(0)
+day_registered = Hash.new(0)
+
 attendee_data.each do |row|
   id = row[0]
   name = row[:first_name]
   zipcode = clean_zipcode(row[:zipcode])
   phone_number = clean_phone_number(row[:homephone])
+  reg_time = clean_reg_time(row[:regdate])
+
+  hour_registered[reg_time.hour] += 1
+  day_registered[reg_time.day] += 1
 
   legislators = legislators_by_zipcode(zipcode)
 
@@ -70,3 +82,11 @@ attendee_data.each do |row|
 
   save_thank_you_letter(id, form_letter)
 end
+
+puts "The distribution of registration times is:"
+puts "  Hour\tRegistrations"
+hour_registered.each{ |hour, count| puts("  #{hour}\t#{count}") }
+
+puts "The distribution of registration days is:"
+puts "  Day\tRegistrations"
+day_registered.each{ |day, count| puts("  #{day}\t#{count}") }
