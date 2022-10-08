@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "csv"
 require "google/apis/civicinfo_v2"
 require "erb"
@@ -16,12 +18,12 @@ def legislators_by_zipcode(zipcode)
   civic_info.key = "AIzaSyClRzDqDh5MsXwnCWi0kOiiBivP6JsSyBw"
 
   begin
-    legislators = civic_info.representative_info_by_address(
+    civic_info.representative_info_by_address(
       address: zipcode,
       levels: "country",
-      roles: ["legislatorUpperBody", "legislatorLowerBody"]
+      roles: %w[legislatorUpperBody legislatorLowerBody]
     ).officials
-  rescue
+  rescue Google::Apis::ClientError
     "You can find your representatives by visiting www.commoncause.org/take-action/find-elected-officials"
   end
 end
@@ -30,7 +32,7 @@ def save_thank_you_letter(id, form_letter)
   Dir.mkdir("output") unless Dir.exist?("output")
 
   filename = "output/thanks_#{id}.html"
-  File.open(filename, "w"){ |file| file.puts form_letter }
+  File.open(filename, "w") { |file| file.puts form_letter }
 end
 
 def format_phone_number(phone_number)
@@ -38,11 +40,11 @@ def format_phone_number(phone_number)
 end
 
 def clean_phone_number(phone_number)
-  parsed_number = phone_number.split("").select{ |x| x =~ /\d/ }.join
+  parsed_number = phone_number.split("").select { |x| x =~ /\d/ }.join
 
-  if (parsed_number.length == 10)
+  if parsed_number.length == 10
     format_phone_number(parsed_number)
-  elsif (parsed_number.length == 11 && parsed_number.start_with?("1"))
+  elsif parsed_number.length == 11 && parsed_number.start_with?("1")
     format_phone_number(parsed_number[1..10])
   else
     "We don't have a valid phone number on file for you. Add your number today to sign up for text alerts!"
@@ -91,7 +93,7 @@ end
 puts "The most popular registration times are:"
 puts "  Hour\t\tRegistrations"
 hour_registered.sort_by(&:last).reverse.to_h.each{ |hour, count|
-  puts("  #{hour.to_s.rjust(2, "0")}:00\t\t#{count}")
+  puts("  #{hour.to_s.rjust(2, '0')}:00\t\t#{count}")
 }
 
 puts "The most popular registration days are:"
