@@ -2,6 +2,7 @@ require "csv"
 require "google/apis/civicinfo_v2"
 require "erb"
 require "time"
+require "date"
 
 SAMPLE_FILE_PATH = "event_attendees.csv"
 TEMPLATE_LETTER_PATH = "form_letter.erb"
@@ -52,6 +53,10 @@ def clean_reg_time(reg_time)
   Time.strptime(reg_time, "%m/%d/%y %H:%M")
 end
 
+def wday_format(day)
+  %w[Sunday Monday Tuesday Wednesday Thursday Friday Saturday][day]
+end
+
 puts "Event Manager Initialized."
 
 # Open attendees file and initalize letter template
@@ -74,7 +79,7 @@ attendee_data.each do |row|
   reg_time = clean_reg_time(row[:regdate])
 
   hour_registered[reg_time.hour] += 1
-  day_registered[reg_time.day] += 1
+  day_registered[reg_time.wday] += 1
 
   legislators = legislators_by_zipcode(zipcode)
 
@@ -89,4 +94,4 @@ hour_registered.each{ |hour, count| puts("  #{hour}\t#{count}") }
 
 puts "The distribution of registration days is:"
 puts "  Day\tRegistrations"
-day_registered.each{ |day, count| puts("  #{day}\t#{count}") }
+day_registered.each{ |day, count| puts("  #{wday_format(day)}\t#{count}") }
