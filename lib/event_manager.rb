@@ -31,6 +31,22 @@ def save_thank_you_letter(id, form_letter)
   File.open(filename, "w"){ |file| file.puts form_letter }
 end
 
+def format_phone_number(phone_number)
+  "#{phone_number[0, 3]}-#{phone_number[3, 3]}-#{phone_number[6, 4]}"
+end
+
+def clean_phone_number(phone_number)
+  parsed_number = phone_number.split("").select{ |x| x =~ /[0-9]/ }.join
+
+  if (parsed_number.length == 10)
+    format_phone_number(parsed_number)
+  elsif (parsed_number.length == 11 && parsed_number.start_with?("1"))
+    format_phone_number(parsed_number[1..11])
+  else
+    "000-000-0000"
+  end
+end
+
 puts "Event Manager Initialized."
 
 # Open attendees file and initalize letter template
@@ -46,10 +62,13 @@ attendee_data.each do |row|
   id = row[0]
   name = row[:first_name]
   zipcode = clean_zipcode(row[:zipcode])
+  phone_number = clean_phone_number(row[:homephone])
 
   legislators = legislators_by_zipcode(zipcode)
 
   form_letter = erb_template.result(binding)
 
-  save_thank_you_letter(id, form_letter)
+  puts(phone_number)
+  # save_thank_you_letter(id, form_letter)
+
 end
