@@ -1,6 +1,9 @@
 require "csv"
 require "google/apis/civicinfo_v2"
+require "erb"
 
+SAMPLE_FILE_PATH = "event_attendees.csv"
+TEMPLATE_LETTER_PATH = "form_letter.erb"
 
 def clean_zipcode(zipcode)
   zipcode.to_s.rjust(5, "0")[0..4]
@@ -15,9 +18,7 @@ def legislators_by_zipcode(zipcode)
       address: zipcode,
       levels: "country",
       roles: ["legislatorUpperBody", "legislatorLowerBody"]
-    )
-    legislators = legislators.officials
-    legislator_names = legislators.map(&:name).join(", ")
+    ).officials
   rescue
     "You can find your representatives by visiting www.commoncause.org/take-action/find-elected-officials"
   end
@@ -25,14 +26,22 @@ end
 
 puts "Event Manager Initialized."
 
-SAMPLE_FILE_PATH = "event_attendees.csv"
+# Open attendees file and initalize letter template
+attendee_data = CSV.open(
+  SAMPLE_FILE_PATH,
+  headers: true,
+  header_converters: :symbol
+)
+template_letter = File.read(TEMPLATE_LETTER_PATH)
+erb_template = ERB.new template_letter
 
-contents = CSV.open(SAMPLE_FILE_PATH, headers: true, header_converters: :symbol)
-contents.each do |row|
+attendee_data.each do |row|
   name = row[:first_name]
   zipcode = clean_zipcode(row[:zipcode])
 
   legislators = legislators_by_zipcode(zipcode)
 
-  puts "#{name}\t#{zipcode}\t#{legislators}"
+  form_letter = erb_template.result(binding)
+
+  puts form_letter
 end
