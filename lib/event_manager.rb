@@ -41,7 +41,7 @@ def clean_phone_number(phone_number)
   if (parsed_number.length == 10)
     format_phone_number(parsed_number)
   elsif (parsed_number.length == 11 && parsed_number.start_with?("1"))
-    format_phone_number(parsed_number[1..11])
+    format_phone_number(parsed_number[1..10])
   else
     "000-000-0000"
   end
