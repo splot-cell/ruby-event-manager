@@ -88,10 +88,14 @@ attendee_data.each do |row|
   save_thank_you_letter(id, form_letter)
 end
 
-puts "The distribution of registration times is:"
-puts "  Hour\tRegistrations"
-hour_registered.each{ |hour, count| puts("  #{hour}\t#{count}") }
+puts "The most popular registration times are:"
+puts "  Hour\t\tRegistrations"
+hour_registered.sort_by(&:last).reverse.to_h.each{ |hour, count|
+  puts("  #{hour.to_s.rjust(2, "0")}:00\t\t#{count}")
+}
 
-puts "The distribution of registration days is:"
-puts "  Day\tRegistrations"
-day_registered.each{ |day, count| puts("  #{wday_format(day)}\t#{count}") }
+puts "The most popular registration days are:"
+puts "  Day\t\tRegistrations"
+day_registered.sort_by(&:last).reverse.to_h.each{ |day, count|
+  puts("  #{wday_format(day)}\t#{count}")
+}
