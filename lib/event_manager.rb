@@ -36,14 +36,14 @@ def format_phone_number(phone_number)
 end
 
 def clean_phone_number(phone_number)
-  parsed_number = phone_number.split("").select{ |x| x =~ /[0-9]/ }.join
+  parsed_number = phone_number.split("").select{ |x| x =~ /\d/ }.join
 
   if (parsed_number.length == 10)
     format_phone_number(parsed_number)
   elsif (parsed_number.length == 11 && parsed_number.start_with?("1"))
     format_phone_number(parsed_number[1..10])
   else
-    "000-000-0000"
+    "We don't have a valid phone number on file for you. Add your number today to sign up for text alerts!"
   end
 end
 
