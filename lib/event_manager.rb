@@ -59,45 +59,59 @@ def wday_format(day)
   %w[Sunday Monday Tuesday Wednesday Thursday Friday Saturday][day]
 end
 
-puts "Event Manager Initialized."
-
-# Open attendees file and initalize letter template
-attendee_data = CSV.open(
-  SAMPLE_FILE_PATH,
-  headers: true,
-  header_converters: :symbol
-)
-template_letter = File.read(TEMPLATE_LETTER_PATH)
-erb_template = ERB.new template_letter
-
-hour_registered = Hash.new(0)
-day_registered = Hash.new(0)
-
-attendee_data.each do |row|
-  id = row[0]
-  name = row[:first_name]
-  zipcode = clean_zipcode(row[:zipcode])
-  phone_number = clean_phone_number(row[:homephone])
-  reg_time = clean_reg_time(row[:regdate])
-
-  hour_registered[reg_time.hour] += 1
-  day_registered[reg_time.wday] += 1
-
-  legislators = legislators_by_zipcode(zipcode)
-
-  form_letter = erb_template.result(binding)
-
-  save_thank_you_letter(id, form_letter)
+def print_regtime_data(hours_tally)
+  puts "The most popular registration times are:"
+  puts "  Hour\t\tRegistrations"
+  hours_tally.sort_by(&:last).reverse.to_h.each do |hour, count|
+    puts("  #{hour.to_s.rjust(2, '0')}:00\t\t#{count}")
+  end
 end
 
-puts "The most popular registration times are:"
-puts "  Hour\t\tRegistrations"
-hour_registered.sort_by(&:last).reverse.to_h.each{ |hour, count|
-  puts("  #{hour.to_s.rjust(2, '0')}:00\t\t#{count}")
-}
+def print_regday_data(days_tally)
+  puts "The most popular registration days are:"
+  puts "  Day\t\tRegistrations"
+  days_tally.sort_by(&:last).reverse.to_h.each do |day, count|
+    puts("  #{wday_format(day)}\t#{count}")
+  end
+end
 
-puts "The most popular registration days are:"
-puts "  Day\t\tRegistrations"
-day_registered.sort_by(&:last).reverse.to_h.each{ |day, count|
-  puts("  #{wday_format(day)}\t#{count}")
-}
+def manage_event
+  puts "Event Manager Initialized."
+
+  # Open attendees file and initalize letter template
+  attendee_data = CSV.open(
+    SAMPLE_FILE_PATH,
+    headers: true,
+    header_converters: :symbol
+  )
+  template_letter = File.read(TEMPLATE_LETTER_PATH)
+  erb_template = ERB.new template_letter
+
+  # Initalize structures for storing registration data
+  hours_tally = Hash.new(0)
+  days_tally = Hash.new(0)
+
+  # Process each attendee and generate personalized thank you
+  attendee_data.each do |row|
+    id = row[0]
+    name = row[:first_name]
+    zipcode = clean_zipcode(row[:zipcode])
+    phone_number = clean_phone_number(row[:homephone])
+    reg_time = clean_reg_time(row[:regdate])
+
+    hours_tally[reg_time.hour] += 1
+    days_tally[reg_time.wday] += 1
+
+    legislators = legislators_by_zipcode(zipcode)
+
+    form_letter = erb_template.result(binding)
+
+    save_thank_you_letter(id, form_letter)
+  end
+
+  # Print analysis of registration times
+  print_regtime_data(hours_tally)
+  print_regday_data(days_tally)
+end
+
+manage_event
